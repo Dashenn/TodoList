@@ -6,7 +6,7 @@ let idCount = 1;
 const  addTask = () => { //добавление таска в массив
     
     const newTask = {
-        id:idCount++,
+        id:Date.now(),
         text: input.value,
         completed: false
     }
@@ -57,13 +57,13 @@ const createList = (list) => {
             <button class="task-delete">Delete</button>
         </li>
     `
-    taskList.insertAdjacentHTML('beforeend', task)
+    taskList.innerHTML += task
     })
     addDel()
     updateTaskStatus();
 }
 
-createList(todoList)
+//createList(todoList)
 
 const checkAll = document.querySelector('.all')
 
@@ -91,3 +91,6 @@ const delCompleted = () => {
     createList(todoList);
 };
 btnDelCompl.addEventListener('click', delCompleted); 
+
+
+
