@@ -34,10 +34,9 @@ li {
    height: 2%;
    margin-top: auto;
    margin-bottom: auto;
+
 }
-.visible {
-    display: inline;
-}
-.no-visible {
-    display: none;
+
+.active-tab {
+    background-color: aquamarine;
 }

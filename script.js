@@ -1,14 +1,16 @@
-
-
-let todoList = []
 const input = document.querySelector('.input-new-task')
 const addButton = document.querySelector('.task-add')
 const checkAll = document.querySelector('.all-check')
 const deleteCompleted = document.querySelector('.delete-all-completed')
 const todoContainer = document.querySelector('.todo-container')
-const spanAll = document.querySelector('.all')
-const spanActive = document.querySelector('.active')
-const spanCompleted = document.querySelector('.completed')
+const tabs = document.querySelectorAll('.tab')
+const showAll = document.querySelector('#all')
+const showActive = document.querySelector('#active')
+const showCompleted = document.querySelector('#completed')
+const taskList = document.querySelector('.task-list')
+let todoList = []
+let currentTab = 'all'
+
 const addTask = () => { 
     if (input.value === '') {
         return 
@@ -20,20 +22,26 @@ const addTask = () => {
         };
         input.value = ''
         todoList.push(newTask)
-        createList(todoList)
+        checkAll.checked=false
         updateCounters()
+        updateDisplayedTasks(currentTab)
    
 }
+const inputAdd = (event) => {
+    if (event.key === 'Enter') {
+        addTask()
+    }
+}
 const createList = (list) => {
-    const taskList = document.querySelector('.task-list')
+    
     taskList.innerHTML = ''
     list.forEach(item => {
         const task = `
             <li data-id="${item.id}">
             <div class='task-item'> 
-                <input type="checkbox" name="check" class="check" ${item.completed ? 'checked' : ''}>
-                <p class="task-text">${item.text}</p>
-                <input type='text' class='input-edit no-visible' value='${item.text}'/>
+                <input type="checkbox"  class="check" ${item.completed ? 'checked' : ''}>
+                <p class="task-text" >${item.text} </p>
+                <input type='text' class='input-edit ' hidden="hidden" value='${item.text}'/>
                 <button class="task-delete">Удалить</button>
                 </div>
             </li>
@@ -49,25 +57,27 @@ const updateTaskStatus = (id, checked) => {
             task.completed = checked
         }
     });
-    createList(todoList)
+    updateDisplayedTasks()
 
 }
 
 const removeTask = (id) => {
     todoList = todoList.filter(item => item.id !== id)
-    createList(todoList)
+    updateDisplayedTasks()
     updateCounters()
 }
 
-const checkAllTasks = (checked) => {
-    todoList.forEach(item => item.completed = checked)
-    createList(todoList)
+const checkAllTasks = () => {
+    todoList.forEach(item => item.completed = checkAll.checked)
+    updateDisplayedTasks()
     updateCounters()
+
 }
 
 const delCompleted = () => {
     todoList = todoList.filter(item => !item.completed);
-    createList(todoList);
+    updateDisplayedTasks()
+    checkAll.checked=false
     updateCounters()
 };
 
@@ -77,94 +87,91 @@ const editTask = (id, newText) => {
             task.text = newText;
         }
     });
-    createList(todoList);
+ 
 }
 
 const updateCounters = () => {
     const totalCount = todoList.length
     const completedCount = todoList.filter(task => task.completed).length
     const activeCount = totalCount - completedCount
-    spanAll.textContent = `All (${totalCount})`
-    spanCompleted.textContent = `Completed (${completedCount})`
-    spanActive.textContent = `Active (${activeCount})`
+    showAll.textContent = `All (${totalCount})`
+    showCompleted.textContent = `Completed (${completedCount})`
+    showActive.textContent = `Active (${activeCount})`
     
+}
+
+const editDone = (event) => {
+    const listItem = event.target.parentNode.parentNode
+    const id = parseInt(listItem.dataset.id)
+    if (event.key === 'Enter' || event.type==='blur') {
+        const newText = event.target.value
+        editTask(id, newText)
+        updateDisplayedTasks()
+    }
+    if (event.key === 'Escape') {
+        event.target.value = todoList.find(task => task.id === id).text
+        event.target.hidden = 'false';
+        event.target.nextElementSibling.hidden = '';
+    }
 }
 
 
 
 const changeTask = (event) => {
     
-
-    if (event.target === addButton || (event.type === 'keyup' && event.key === 'Enter')) {
-        addTask();
-    } 
     if (event.target.matches('.check')) {
         let id = parseInt(event.target.parentNode.parentNode.dataset.id)
         updateTaskStatus(id, event.target.checked)
+        console.log(event.target);
+       
     } 
     if (event.target.matches('.task-delete')) {
         let id = parseInt(event.target.parentNode.parentNode.dataset.id)
         removeTask(id)
     } 
-    if (event.target=== checkAll) {
-        checkAllTasks(event.target.checked)
-    } 
-    if (event.target === deleteCompleted) {
-        delCompleted()
-    }
-    if (event.target.matches('.task-text') &&event.type === 'dblclick') {
-        const listItem = event.target.parentNode.parentNode;
-        const editInput = listItem.querySelector('.input-edit')
-        const taskText = listItem.querySelector('.task-text')
-        editInput.classList.remove('no-visible')
-        editInput.classList.add('visible')
-        taskText.classList.add('no-visible')
+    
+    if (event.target.matches('.task-text')  && event.detail === 2) {
+        event.target.hidden = 'false'
+        event.target.nextElementSibling.hidden = ''
+        event.target.nextElementSibling.focus()
         
+      }
+}
+  
+const updateDisplayedTasks = () => {
+    let filteredList = []
+    switch(currentTab) {
+        case 'all':
+            filteredList = todoList;
+            break
+        case 'active':
+            filteredList = todoList.filter(task => !task.completed)
+            break
+        case 'completed':
+            filteredList = todoList.filter(task => task.completed)
+            break
     }
-    if (event.type === 'blur' && event.target.matches('.input-edit')) {
-        const listItem = event.target.parentNode.parentNode
-        const newText = event.target.value
-        const id = parseInt(listItem.dataset.id)
-        if (newText) {
-            editTask(id, newText)
-        } else {
-       
-            event.target.value = todoList.find(task => task.id === id).text
-        }
-        createList(todoList)
-    }
-    if (event.type === 'keyup' && event.key === 'Enter' && event.target.matches('.input-edit')) {
-        event.target.blur()
-    }
+    createList(filteredList);
+}
+const switchTabs = (event) => {
+   
+    currentTab = event.target.id
+    updateDisplayedTasks(currentTab)
+    tabs.forEach(item => item.classList.remove('active-tab'))
+    event.target.classList.add('active-tab')
 
-    if (event.type === 'keyup' && event.key === 'Escape' && event.target.matches('.input-edit')) {
-        const listItem = event.target.parentNode.parentNode
-        const editInput = listItem.querySelector('.input-edit')
-        const taskText = listItem.querySelector('.task-text')
-        editInput.classList.add('no-visible')
-        editInput.classList.remove('visible')
-        taskText.classList.remove('no-visible')
-        editInput.value = taskText.textContent
-    }
-    if (event.target === spanAll) {
-        createList(todoList)
-        updateCounters()
-    }
-    if (event.target === spanActive) {
-        todoListActive = todoList.filter(item => item.completed === false)
-        createList(todoListActive)
-        updateCounters()
-    }
-    if (event.target === spanCompleted) {
-        todoListB = todoList.filter(item => item.completed === true)
-        createList(todoListB)
-        updateCounters()
-    }
-};
+}
 
 
-todoContainer.addEventListener('click', changeTask)
-todoContainer.addEventListener('dblclick', changeTask)
-todoContainer.addEventListener('keyup', changeTask)
-todoContainer.addEventListener('blur', changeTask, true)
-input.addEventListener('keyup', changeTask)
+
+
+
+
+taskList.addEventListener('click', changeTask)
+taskList.addEventListener('keyup', editDone)
+taskList.addEventListener('blur', editDone, true)
+input.addEventListener('keyup', inputAdd)
+addButton.addEventListener('click', addTask)
+checkAll.addEventListener('click', checkAllTasks)
+deleteCompleted.addEventListener('click', delCompleted)
+tabs.forEach(item => item.addEventListener('click', switchTabs))
