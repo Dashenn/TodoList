@@ -1,30 +1,41 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
     <title>Todo List</title>
-</head>
-<body>
-    
+  </head>
+  <body>
     <div class="todo-container">
-        <h1>TodoJS App</h1>
-        <div class="todoadd">
-            <input type="text" placeholder="enter task" name="task" class="input-new-task">
-            <button class="task-add" >Add</button>
-        </div>
+      <h1>TodoJS App</h1>
+      <div class="todoadd">
+        <input
+          type="text"
+          placeholder="enter task"
+          name="task"
+          class="input-new-task"
+        />
+        <button class="task-add">Add</button>
+      </div>
+      <div class="check-and-delete">
         <div class="check-all-container">
-            <input type="checkbox" name="check-all" class="all-check" >
-        <p class="check-all">Check all todos</p>
+          <input type="checkbox" name="check-all" class="all-check" />
+          <p class="check-all">Check all todos</p>
         </div>
-        
-        <ul class="task-list"></ul>
         <button class="delete-all-completed">Delete All Completed</button>
+      </div>
+
+      <ul class="task-list"></ul>
+      <div class="tabs">
         <button class="active-tab tab" id="all">All</button>
-        <button class=" tab" id="active">Active</button>
+        <button class="tab" id="active">Active</button>
         <button class="tab" id="completed">Completed</button>
+      </div>
+      <div class="pagination">
+        <button class="page-button active-page-button">1</button>
+      </div>
     </div>
     <script src="script.js"></script>
-</body>
+  </body>
 </html>

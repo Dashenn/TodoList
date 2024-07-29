@@ -1,42 +1,132 @@
 .todo-container {
-    border: 1px solid red;
-    width: 80%;
-  
+  border: 3px solid #85c6ff;
+  border-radius: 15px;
+  padding: 3%;
+  padding-top: 1%;
+  width: 50%;
+  margin-left: auto;
+  margin-right: auto;
+}
+button {
+  cursor: pointer;
+}
+h1 {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 5%;
+}
+.todoadd {
+  display: flex;
+  justify-content: center;
+  gap: 4%;
+}
+.input-new-task {
+  width: 30%;
+  border-radius: 5px;
+  height: 20px;
+  border: 2px solid rgb(154, 154, 154);
+}
+.task-add {
+  width: 13%;
+  border: none;
+  border-radius: 10px;
+  background-color: rgb(55, 140, 205);
+  color: white;
+  font-weight: 700;
+}
+.task-list {
+  padding: 0;
+  gap: 15px;
+  display: flex;
+  flex-direction: column;
+  height: 350px;
 }
 .check-all-container {
-    display: flex;
+  display: flex;
 }
-
+.check-and-delete {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5%;
+}
+.delete-all-completed {
+  width: 20%;
+  height: 4%;
+  margin-top: auto;
+  margin-bottom: auto;
+  padding: 1%;
+  border: none;
+  border-radius: 10px;
+  background-color: rgb(55, 140, 205);
+  color: white;
+}
 .task-text {
-    margin-left: 3%;
+  width: 80%;
 }
 .task-delete {
-    margin-left: 5%;
-    width: 8%;
-    height: 3%;
-    margin-top: auto;
-    margin-bottom: auto;
-    background-color: rgb(240, 79, 79);
-    color: white;
-    border-radius: 10%;
-    border: none;
-    padding: 1%;
-    font-weight: 600;
+  width: 30px;
+  height: 30px;
+  margin-top: auto;
+  margin-bottom: auto;
+  background-color: rgb(240, 79, 79);
+  color: white;
+  border-radius: 10px;
+  border: none;
+  padding: 1%;
+  font-weight: 600;
 }
 .task-item {
-    display: flex;
+  display: flex;
+  justify-content: space-around;
+  border: 1px solid rgb(166, 166, 166);
+  border-radius: 10px;
+  height: 50px;
 }
 li {
-    list-style-type: none
+  list-style-type: none;
 }
 .input-edit {
-   margin-left: 3%;
-   height: 2%;
-   margin-top: auto;
-   margin-bottom: auto;
+  width: 80%;
 
+  margin-top: auto;
+  margin-bottom: auto;
 }
-
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 2%;
+}
+.tab {
+  width: 20%;
+  border-radius: 10px;
+  border: none;
+  background-color: rgb(105, 100, 206);
+  color: white;
+  padding: 1%;
+}
 .active-tab {
-    background-color: aquamarine;
+  background-color: rgb(255, 255, 255);
+  border: 2px solid rgb(105, 100, 206);
+  color: rgb(9, 9, 107);
+  font-weight: 900;
+  box-shadow: 2px 1px 20px 1px #c1c1fe;
+}
+.page-button {
+  border-radius: 50%;
+  border: none;
+  background-color: rgb(209, 255, 255);
+  font-size: 20px;
+  font-weight: 600;
+  color: #4e2407;
+}
+.active-page-button {
+  background-color: rgb(32, 197, 197);
+  color: white;
+  box-shadow: 1px 1px 5px 1px #c1c1fe;
+}
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 2%;
+  margin-top: 5%;
 }
