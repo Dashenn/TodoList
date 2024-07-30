@@ -3,7 +3,7 @@
   border-radius: 15px;
   padding: 3%;
   padding-top: 1%;
-  width: 50%;
+  width: 90%;
   margin-left: auto;
   margin-right: auto;
 }
@@ -39,7 +39,6 @@ h1 {
   gap: 15px;
   display: flex;
   flex-direction: column;
-  height: 350px;
 }
 .check-all-container {
   display: flex;
@@ -62,32 +61,35 @@ h1 {
 }
 .task-text {
   width: 80%;
+  max-width: 80%;
+  word-break: break-all;
+  height: auto;
+  word-wrap: break-word;
 }
 .task-delete {
-  width: 30px;
-  height: 30px;
-  margin-top: auto;
-  margin-bottom: auto;
+  width: 3%;
+
+  margin: 0.1%;
   background-color: rgb(240, 79, 79);
   color: white;
   border-radius: 10px;
   border: none;
   padding: 1%;
   font-weight: 600;
+  text-align: center;
 }
 .task-item {
   display: flex;
   justify-content: space-around;
   border: 1px solid rgb(166, 166, 166);
   border-radius: 10px;
-  height: 50px;
 }
 li {
   list-style-type: none;
 }
 .input-edit {
   width: 80%;
-
+  height: 20px;
   margin-top: auto;
   margin-bottom: auto;
 }
@@ -95,6 +97,7 @@ li {
   display: flex;
   justify-content: center;
   gap: 2%;
+  margin-top: 6%;
 }
 .tab {
   width: 20%;
@@ -118,6 +121,7 @@ li {
   font-size: 20px;
   font-weight: 600;
   color: #4e2407;
+  margin: 2%;
 }
 .active-page-button {
   background-color: rgb(32, 197, 197);
@@ -127,6 +131,9 @@ li {
 .pagination {
   display: flex;
   justify-content: center;
-  gap: 2%;
+
   margin-top: 5%;
+  padding-left: 10%;
+  padding-right: 10%;
+  flex-wrap: wrap;
 }
