@@ -17,6 +17,15 @@
   let todoList = [];
   let currentTab = "all";
   let currentPage = 1;
+  let totalPages = 1;
+
+  const validationText = (text) => {
+    return text
+      .trim()
+      .replace(/ {2,}/g, " ")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  };
 
   const addTask = () => {
     if (input.value.trim() === "") {
@@ -24,13 +33,7 @@
     }
     const newTask = {
       id: Date.now(),
-      text: input.value
-        .trim()
-        .replace(/ {2,}/g, " ")
-
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;"),
-
+      text: validationText(input.value),
       completed: false,
     };
     currentTab = "all";
@@ -40,16 +43,18 @@
     input.value = "";
     todoList.push(newTask);
     checkAll.checked = false;
-
     const totalTasks = todoList.length;
-    const totalPages = Math.ceil(totalTasks / TASKS_PER_PAGE);
-
+    calculationTotalPage(totalTasks);
     if (currentPage < totalPages) {
       currentPage = totalPages;
     }
-
     updateCounters();
     updateDisplayedTasks();
+  };
+
+  const calculationTotalPage = (totalTasks) => {
+    totalPages = Math.ceil(totalTasks / TASKS_PER_PAGE);
+    return totalPages;
   };
 
   const inputAdd = (event) => {
@@ -63,7 +68,6 @@
     const start = (currentPage - 1) * TASKS_PER_PAGE;
     const end = start + TASKS_PER_PAGE;
     const paginatedList = list.slice(start, end);
-
     paginatedList.forEach((item) => {
       const task = `<li data-id="${item.id}">
             <div class='task-item'> 
@@ -79,9 +83,14 @@
         </li>`;
       taskList.innerHTML += task;
     });
-
     updateCounters();
     createPagination(list.length);
+  };
+
+  const resetTabs = () => {
+    currentTab = "all";
+    allStyles();
+    currentPage = 1;
   };
 
   const updateTaskStatus = (id, checked) => {
@@ -90,60 +99,44 @@
         item.completed = checked;
       }
     });
-    if ((todoList.filter((task) => !task.completed).length === 0 && currentTab==='active' ) ) {
-      currentTab = "all";
-      allStyles();
-      currentPage=1
-    }
-    if ((todoList.filter((task) => task.completed).length === 0 && currentTab==='completed') ) {
-     
-      currentTab = "all";
-      allStyles();
-      currentPage=1
+    const filteredList = todoList.filter((task) => {
+      if (currentTab === "active") return !task.completed;
+      if (currentTab === "completed") return task.completed;
+      return true;
+    });
+    if (filteredList.length === 0) {
+      resetTabs();
     }
     if (todoList.every((item) => item.completed)) {
       checkAll.checked = true;
     } else {
       checkAll.checked = false;
     }
-  
+    calculationTotalPage(filteredList.length);
+    if (currentPage > totalPages && currentPage > 1) {
+      currentPage--;
+    }
+    updateDisplayedTasks();
+  };
+
+  const removeTask = (id) => {
+    todoList = todoList.filter((item) => item.id !== id);
+    const totalTasks = todoList.length;
+    calculationTotalPage(totalTasks);
     const filteredList = todoList.filter((task) => {
       if (currentTab === "active") return !task.completed;
       if (currentTab === "completed") return task.completed;
       return true;
     });
-  
-    const totalPages = Math.ceil(filteredList.length / TASKS_PER_PAGE);
-    if (currentPage > totalPages && currentPage > 1) {
-      currentPage--;  
-    }
-  
-
-    updateDisplayedTasks();
-  };
-  
-
-  const removeTask = (id) => {
-    todoList = todoList.filter((item) => item.id !== id);
-
-    const totalTasks = todoList.length;
-    const totalPages = Math.ceil(totalTasks / TASKS_PER_PAGE);
     if (currentPage > totalPages) {
       currentPage = totalPages;
     }
-    if ((todoList.filter((task) => !task.completed).length === 0 && currentTab==='active' || todoList.length === 0) ) {
-      currentTab = "all";
-      allStyles();
-      currentPage=1
+    if (filteredList.length === 0) {
+      resetTabs();
     }
-    if ((todoList.filter((task) => task.completed).length === 0 && currentTab==='completed') ) {
-     
-      currentTab = "all";
-      allStyles();
-      currentPage=1
-    }
-    if (todoList.filter((task) => task.completed).length === 0) {
-      checkAll.checked = false
+    if (todoList.length === 0) {
+      checkAll.checked = false;
+      resetTabs();
     }
     updateDisplayedTasks();
     createPagination(totalTasks);
@@ -153,21 +146,18 @@
   const checkAllTasks = () => {
     if (todoList.length !== 0) {
       todoList.forEach((item) => (item.completed = checkAll.checked));
-    currentTab = "all";
-    allStyles();
-    updateDisplayedTasks();
-
-    updateCounters();
-    }else {
+      currentTab = "all";
+      allStyles();
+      updateDisplayedTasks();
+      updateCounters();
+    } else {
       checkAll.checked = false;
     }
-    
   };
 
   const delCompleted = () => {
     if (todoList.some((item) => item.completed)) {
       todoList = todoList.filter((item) => !item.completed);
-
       currentTab = "all";
       currentPage = 1;
       allStyles();
@@ -198,22 +188,18 @@
     const listItem = event.target.parentNode.parentNode;
     const id = parseInt(listItem.dataset.id);
     if (
-      (event.keyCode === ENTER_BUTTON ||
-      event.type === "blur") && event.target.matches(".input-edit")
+      (event.keyCode === ENTER_BUTTON || event.type === "blur") &&
+      event.target.matches(".input-edit")
     ) {
-      const newText = event.target.value
-      .trim()
-        .replace(/ {2,}/g, " ")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-        if (newText.length !==0) {
-          editTask(id, newText);
-          updateDisplayedTasks();
-        }else {
-          editTask(id, todoList.find((task) => task.id === id).text);
-          updateDisplayedTasks();
-        }
-      
+      const newText = validationText(event.target.value);
+      console.log(newText);
+      if (newText.length !== 0) {
+        editTask(id, newText);
+        updateDisplayedTasks();
+      } else {
+        editTask(id, todoList.find((task) => task.id === id).text);
+        updateDisplayedTasks();
+      }
     }
     if (event.keyCode === ESCAPE_BUTTON) {
       event.target.value = todoList.find((task) => task.id === id).text;
@@ -231,7 +217,6 @@
       let id = parseInt(event.target.parentNode.parentNode.dataset.id);
       removeTask(id);
     }
-
     if (event.target.matches(".task-text") && event.detail === DETAIL_TWO) {
       event.target.hidden = "false";
       event.target.nextElementSibling.hidden = "";
@@ -247,14 +232,11 @@
         break;
       case "active":
         filteredList = todoList.filter((task) => !task.completed);
-
         break;
       case "completed":
         filteredList = todoList.filter((task) => task.completed);
-
         break;
     }
-
     createList(filteredList);
   };
 
@@ -262,22 +244,21 @@
     currentTab = event.target.id;
     currentPage = 1;
     updateDisplayedTasks();
-    tabs.forEach((item) => item.classList.remove("active-tab"));
-    event.target.classList.add("active-tab");
+    allStyles();
   };
+
   const allStyles = () => {
     tabs.forEach((item) => item.classList.remove("active-tab"));
     showAll.classList.add("active-tab");
   };
-  const createPagination = (totalTasks) => {
-    const totalPages = Math.ceil(totalTasks / TASKS_PER_PAGE);
-    paginationContainer.innerHTML = `
-        <button class='page-button ${
-          1 === currentPage ? "active-page-button" : ""
-        }' data-id="1">1</button>
-        `;
 
-    for (let i = 2; i <= totalPages; i++) {
+  const createPagination = (totalTasks) => {
+    totalPages = calculationTotalPage(totalTasks);
+    if (totalPages === 0) {
+      totalPages = 1;
+    }
+    paginationContainer.innerHTML = "";
+    for (let i = 1; i <= totalPages; i++) {
       const pageButton = `
         <button class='page-button ${
           i === currentPage ? "active-page-button" : ""
@@ -285,15 +266,13 @@
         `;
       paginationContainer.innerHTML += pageButton;
     }
-
-    document.querySelectorAll(".page-button").forEach((button) => {
-      button.addEventListener("click", buttonPageClick);
-    });
   };
 
-  const buttonPageClick = (event) => {
-    currentPage = parseInt(event.target.dataset.id);
-    updateDisplayedTasks();
+  const paginationButtonClick = (event) => {
+    if (event.target.matches(".page-button")) {
+      currentPage = parseInt(event.target.dataset.id);
+      updateDisplayedTasks();
+    }
   };
 
   taskList.addEventListener("click", changeTask);
@@ -304,4 +283,5 @@
   checkAll.addEventListener("click", checkAllTasks);
   deleteCompleted.addEventListener("click", delCompleted);
   tabs.forEach((item) => item.addEventListener("click", switchTabs));
+  paginationContainer.addEventListener("click", paginationButtonClick);
 })();
