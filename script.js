@@ -37,8 +37,7 @@
       completed: false,
     };
     currentTab = "all";
-    tabs.forEach((item) => item.classList.remove("active-tab"));
-    showAll.classList.add("active-tab");
+    allStyles();
     updateDisplayedTasks();
     input.value = "";
     todoList.push(newTask);
@@ -121,16 +120,11 @@
 
   const removeTask = (id) => {
     todoList = todoList.filter((item) => item.id !== id);
-    const totalTasks = todoList.length;
-    calculationTotalPage(totalTasks);
     const filteredList = todoList.filter((task) => {
       if (currentTab === "active") return !task.completed;
       if (currentTab === "completed") return task.completed;
       return true;
     });
-    if (currentPage > totalPages) {
-      currentPage = totalPages;
-    }
     if (filteredList.length === 0) {
       resetTabs();
     }
@@ -138,8 +132,11 @@
       checkAll.checked = false;
       resetTabs();
     }
+    calculationTotalPage(filteredList.length);
+    if (currentPage > totalPages && currentPage > 1) {
+      currentPage--;
+    }
     updateDisplayedTasks();
-    createPagination(totalTasks);
     updateCounters();
   };
 
@@ -158,9 +155,7 @@
   const delCompleted = () => {
     if (todoList.some((item) => item.completed)) {
       todoList = todoList.filter((item) => !item.completed);
-      currentTab = "all";
-      currentPage = 1;
-      allStyles();
+      resetTabs();
       checkAll.checked = false;
       updateDisplayedTasks();
       updateCounters();
@@ -192,7 +187,6 @@
       event.target.matches(".input-edit")
     ) {
       const newText = validationText(event.target.value);
-      console.log(newText);
       if (newText.length !== 0) {
         editTask(id, newText);
         updateDisplayedTasks();
@@ -244,7 +238,8 @@
     currentTab = event.target.id;
     currentPage = 1;
     updateDisplayedTasks();
-    allStyles();
+    tabs.forEach((item) => item.classList.remove("active-tab"));
+    event.target.classList.add("active-tab");
   };
 
   const allStyles = () => {
