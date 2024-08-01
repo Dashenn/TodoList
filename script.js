@@ -4,6 +4,7 @@
   const checkAll = document.querySelector(".all-check");
   const deleteCompleted = document.querySelector(".delete-all-completed");
   const tabs = document.querySelectorAll(".tab");
+  const tabsContainer = document.querySelector(".tabs");
   const showAll = document.querySelector("#all");
   const showActive = document.querySelector("#active");
   const showCompleted = document.querySelector("#completed");
@@ -235,11 +236,13 @@
   };
 
   const switchTabs = (event) => {
-    currentTab = event.target.id;
-    currentPage = 1;
-    updateDisplayedTasks();
-    tabs.forEach((item) => item.classList.remove("active-tab"));
-    event.target.classList.add("active-tab");
+    if (!event.target.matches(".tabs")) {
+      currentTab = event.target.id;
+      currentPage = 1;
+      updateDisplayedTasks();
+      tabs.forEach((item) => item.classList.remove("active-tab"));
+      event.target.classList.add("active-tab");
+    }
   };
 
   const allStyles = () => {
@@ -277,6 +280,6 @@
   addButton.addEventListener("click", addTask);
   checkAll.addEventListener("click", checkAllTasks);
   deleteCompleted.addEventListener("click", delCompleted);
-  tabs.forEach((item) => item.addEventListener("click", switchTabs));
+  tabsContainer.addEventListener("click", switchTabs);
   paginationContainer.addEventListener("click", paginationButtonClick);
 })();
