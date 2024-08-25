@@ -100,17 +100,15 @@
     }
   };
   const updateCounters = () => {
-    console.log(todoList);
     const totalCount = todoList.length;
     const completedCount = todoList.filter((task) => task.isCompleted).length;
-    console.log(completedCount);
     const activeCount = totalCount - completedCount;
     showAll.textContent = `All (${totalCount})`;
     showCompleted.textContent = `Completed (${completedCount})`;
     showActive.textContent = `Active (${activeCount})`;
   };
 const getTasks = async() => {
-  await fetch(URL)
+   await fetch(URL)
       .then((response) => {
         if (!response.ok) {
           throw new Error("Error getting tasks");
@@ -119,21 +117,25 @@ const getTasks = async() => {
       })
       .then((tasks) => {
         todoList = tasks;
-        return todoList
+        createList(tasks)
+        if(tasks.every(item => item.isCompleted ) && tasks.length !== 0) {
+          checkAll.checked = true
+        }
       })
       .catch((error) => {
-        console.error("Error:", error.message);
+        showErrorModal(error.message);
       });
 }
-getTasks()
-console.log(todoList);
+ getTasks()
+
+
+
   const createList = async (list) => {
-    
         taskList.innerHTML = "";
 
         const start = (currentPage - 1) * TASKS_PER_PAGE;
         const end = start + TASKS_PER_PAGE;
-        const paginatedList = todoList.slice(start, end);
+        const paginatedList = list.slice(start, end);
 
         paginatedList.forEach((item) => {
           const task = `<li data-id="${item.id}">
@@ -187,9 +189,9 @@ console.log(todoList);
               return true;
             });
 
-            if (filteredList.length === 0) {
-              resetTabs();
-            }
+            // if (filteredList.length === 0) {
+            //   resetTabs();
+            // }
             checkAll.checked = todoList.every((item) => item.isCompleted);
             calculationTotalPage(filteredList.length);
             if (currentPage > totalPages && currentPage > 1) {
@@ -199,7 +201,7 @@ console.log(todoList);
             updateDisplayedTasks();
           })
           .catch((error) => {
-            console.error("Error updating task status:", error.message);
+            showErrorModal(error.message);
           });
       }
     });
@@ -214,7 +216,6 @@ console.log(todoList);
       },
     })
       .then((response) => {
-        console.log(response);
         if (!response.ok) {
           throw new Error("Failed to update task");
         }
@@ -227,14 +228,16 @@ console.log(todoList);
           if (currentTab === "completed") return task.isCompleted;
           return true;
         });
-          if (filteredList.length === 0) {
-          resetTabs();
-        }
+        //   if (filteredList.length === 0) {
+        //   resetTabs();
+        // }
         if (todoList.length === 0) {
           checkAll.checked = false;
-          resetTabs();
+          // resetTabs();
         }
-
+        if (todoList.every(item => item.isCompleted) ) {
+          checkAll.checked = true
+        }
         calculationTotalPage(filteredList.length);
 
         if (currentPage > totalPages && currentPage > 1) {
@@ -245,12 +248,13 @@ console.log(todoList);
         updateCounters();
       })
       .catch((error) => {
-        console.error("Error deleting task:", error.message);
+        showErrorModal(error.message);
       });
   };
 
   const checkAllTasks = async () => {
     console.log(todoList);
+    
     if (todoList.length !== 0) {
       const isCompleted = checkAll.checked;
 
@@ -269,14 +273,16 @@ console.log(todoList);
           return response.json();
         })
         .then((result) => {
-          todoList = todoList.forEach(
+          console.log(result);
+          
+            todoList.map(
             (item) => (item.isCompleted = isCompleted)
           );
           updateDisplayedTasks();
           updateCounters();
         })
         .catch((error) => {
-          console.error("Error updating all tasks:", error.message);
+          showErrorModal(error.message);
         });
     } else {
       checkAll.checked = false;
@@ -306,36 +312,62 @@ console.log(todoList);
       updateDisplayedTasks();
       updateCounters();
       })
-      .catch(error => console.error(error.message))
+      .catch(showErrorModal(error.message))
       
     }
   };
 
-  const editTask = (id, newText) => {
-    todoList.forEach(async (task) => {
-      if (task.id == id) {
-        task.text = newText;
-        await putResource(url, task, id).then(() => {
-          getResource(url);
-        });
-      }
-    });
-  };
+  const editTask = async(id, newText) => {
+    const task = todoList.find(task => task.id == id);
 
+    if (task) {
+        await fetch(`${URL}/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: newText }), 
+        })
+        .then(response => {
+            if (!response.ok) {
+                
+                    throw new Error("Failed to update task");
+                
+            }
+            return response.json();
+        })
+        .then(data => {
+            task.text = newText;
+            updateDisplayedTasks();
+            updateCounters();
+        })
+        .catch(error => {
+            showErrorModal(error.message);
+        });
+    } else {
+        console.log('Task not found');
+    }
+};
+
+let isUpdating = false;
   const editDone = (event) => {
+    if (isUpdating) return;
     const listItem = event.target.parentNode.parentNode;
     const id = parseInt(listItem.dataset.id);
+    const task = todoList.find((task) => task.id == id);
+    const oldText = task.text;
     if (
       (event.keyCode === ENTER_BUTTON || event.type === "blur") &&
       event.target.matches(".input-edit")
+      
     ) {
+    
       const newText = validationText(event.target.value);
-      if (newText.length !== 0) {
+      if (newText.length !== 0 && newText !== oldText) {
+        isUpdating = true;
         editTask(id, newText);
 
         updateDisplayedTasks();
       } else {
-        editTask(id, todoList.find((task) => task.id == id).text);
+        
         updateDisplayedTasks();
       }
     }
@@ -377,6 +409,8 @@ console.log(todoList);
         filteredList = todoList.filter((task) => task.isCompleted);
         break;
     }
+    console.log(filteredList);
+    
     createList(filteredList);
   };
 
@@ -401,6 +435,41 @@ console.log(todoList);
       updateDisplayedTasks();
     }
   };
+
+const modal = document.getElementById('error-modal');
+const closeBtn = document.querySelector('.close');
+const errorMessageElem = document.getElementById('error-message');
+
+
+function showErrorModal(message) {
+  errorMessageElem.textContent = message;
+  modal.style.display = 'block';
+}
+
+
+function closeModal() {
+  modal.style.display = 'none';
+}
+
+
+closeBtn.addEventListener('click', closeModal);
+
+
+window.addEventListener('click', (event) => {
+  if (event.target === modal) {
+    closeModal();
+  }
+});
+
+function logDateAfterDelay(delay, callback) {
+  setTimeout(() => {
+    const now = new Date();
+    console.log(`Date and time: ${now}`);
+    callback();
+  }, delay);
+}
+
+
 
   taskList.addEventListener("click", changeTask);
   taskList.addEventListener("keyup", editDone);
