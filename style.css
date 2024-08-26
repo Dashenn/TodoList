@@ -41,7 +41,7 @@ h1 {
   gap: 15px;
   display: flex;
   flex-direction: column;
-  height: 350px;
+  height: auto;
   overflow-y: auto;
   padding-right: 3%;
 }
@@ -160,14 +160,16 @@ li {
 }
 
 .modal-content {
+  
   background-color: #fefefe;
   margin: 15% auto;
   padding: 20px;
   border: 1px solid #888;
-  width: 80%;
+  width: 30%;
 }
 
 .close {
+  margin-top: 2%;
   color: #aaa;
   float: right;
   font-size: 28px;

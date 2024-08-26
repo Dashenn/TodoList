@@ -10,6 +10,9 @@
   const showCompleted = document.querySelector("#completed");
   const taskList = document.querySelector(".task-list");
   const paginationContainer = document.querySelector(".pagination");
+  const modal = document.getElementById("error-modal");
+  const closeBtn = document.querySelector(".close");
+  const errorMessageElem = document.getElementById("error-message");
 
   const URL = "http://localhost:3000/todos";
   const TASKS_PER_PAGE = 5;
@@ -32,22 +35,24 @@
 
   const addTask = () => {
     const text = input.value.trim();
+    console.log(text);
 
     if (text === "") {
       return;
     }
 
-    fetch(URL, {
+    fetch(`${URL}/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ text: validationText(text) }),
+      body: JSON.stringify({ text: text }),
     })
       .then((res) => {
         if (!res.ok) {
           throw new Error("Error creating task");
         }
+        console.log(res);
         return res.json();
       })
       .then((createdTask) => {
@@ -69,8 +74,7 @@
         updateDisplayedTasks();
       })
       .catch((error) => {
-        console.error("Error:", error.message);
-        openModal(error.message);
+        showErrorModal(error.message);
       });
   };
 
@@ -107,8 +111,8 @@
     showCompleted.textContent = `Completed (${completedCount})`;
     showActive.textContent = `Active (${activeCount})`;
   };
-const getTasks = async() => {
-   await fetch(URL)
+  const getTasks = async () => {
+    await fetch(URL)
       .then((response) => {
         if (!response.ok) {
           throw new Error("Error getting tasks");
@@ -117,28 +121,28 @@ const getTasks = async() => {
       })
       .then((tasks) => {
         todoList = tasks;
-        createList(tasks)
-        if(tasks.every(item => item.isCompleted ) && tasks.length !== 0) {
-          checkAll.checked = true
+
+        createList(tasks);
+
+        if (tasks.every((item) => item.isCompleted) && tasks.length !== 0) {
+          checkAll.checked = true;
         }
       })
       .catch((error) => {
         showErrorModal(error.message);
       });
-}
- getTasks()
-
-
+  };
+  getTasks();
 
   const createList = async (list) => {
-        taskList.innerHTML = "";
+    taskList.innerHTML = "";
 
-        const start = (currentPage - 1) * TASKS_PER_PAGE;
-        const end = start + TASKS_PER_PAGE;
-        const paginatedList = list.slice(start, end);
+    const start = (currentPage - 1) * TASKS_PER_PAGE;
+    const end = start + TASKS_PER_PAGE;
+    const paginatedList = list.slice(start, end);
 
-        paginatedList.forEach((item) => {
-          const task = `<li data-id="${item.id}">
+    paginatedList.forEach((item) => {
+      const task = `<li data-id="${item.id}">
                 <div class='task-item'> 
                     <input type="checkbox" class="check" ${
                       item.isCompleted ? "checked" : ""
@@ -150,14 +154,12 @@ const getTasks = async() => {
                     <button class="task-delete">X</button>
                 </div>
             </li>`;
-          taskList.innerHTML += task;
-        });
+      taskList.innerHTML += task;
+    });
 
-        updateCounters();
-        createPagination(list.length);
-      }
-  ;
-
+    updateCounters();
+    createPagination(list.length);
+  };
   createList(todoList);
 
   const resetTabs = () => {
@@ -169,12 +171,10 @@ const getTasks = async() => {
   const updateTaskStatus = (id, checked) => {
     todoList.forEach((item) => {
       if (item.id == id) {
-        item.isCompleted = checked;
-
-        fetch(`${URL}/${id}`, {
+        fetch(`${URL}/update/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(item),
+          body: JSON.stringify({ isCompleted: !item.isCompleted }),
         })
           .then((response) => {
             if (!response.ok) {
@@ -183,6 +183,7 @@ const getTasks = async() => {
             return response.json();
           })
           .then((result) => {
+            item.isCompleted = checked;
             const filteredList = todoList.filter((task) => {
               if (currentTab === "active") return !task.isCompleted;
               if (currentTab === "completed") return task.isCompleted;
@@ -208,8 +209,7 @@ const getTasks = async() => {
   };
 
   const removeTask = async (id) => {
-    const taskDel = todoList.find((item) => item.id == id);
-    await fetch(`${URL}/${id}`, {
+    await fetch(`${URL}/delete/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -217,7 +217,7 @@ const getTasks = async() => {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Failed to update task");
+          throw new Error("Failed to delete task");
         }
         return response.json();
       })
@@ -235,8 +235,11 @@ const getTasks = async() => {
           checkAll.checked = false;
           // resetTabs();
         }
-        if (todoList.every(item => item.isCompleted) ) {
-          checkAll.checked = true
+        if (
+          todoList.every((item) => item.isCompleted) &&
+          todoList.length !== 0
+        ) {
+          checkAll.checked = true;
         }
         calculationTotalPage(filteredList.length);
 
@@ -254,16 +257,16 @@ const getTasks = async() => {
 
   const checkAllTasks = async () => {
     console.log(todoList);
-    
+
     if (todoList.length !== 0) {
       const isCompleted = checkAll.checked;
 
-      await fetch(URL, {
+      await fetch(`${URL}/update-all`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body : JSON.stringify({isCompleted})
+        body: JSON.stringify({ isCompleted }),
       })
         .then((response) => {
           console.log(response);
@@ -274,10 +277,8 @@ const getTasks = async() => {
         })
         .then((result) => {
           console.log(result);
-          
-            todoList.map(
-            (item) => (item.isCompleted = isCompleted)
-          );
+
+          todoList.map((item) => (item.isCompleted = isCompleted));
           updateDisplayedTasks();
           updateCounters();
         })
@@ -291,88 +292,84 @@ const getTasks = async() => {
 
   const delCompleted = async () => {
     if (todoList.some((item) => item.isCompleted)) {
-      fetch(URL, {
+      fetch(`${URL}/delete-completed`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
-        
       })
-      .then(responce => {
-        if (!responce.ok) {
-          throw new Error("Failed to update all tasks");
-        }
-        return responce.json()
-      })
-      .then(result => {
-        todoList = todoList.filter((item) => !item.isCompleted);
-      delList = todoList.filter((item) => item.isCompleted);
-      resetTabs();
-      checkAll.checked = false;
-      updateDisplayedTasks();
-      updateCounters();
-      })
-      .catch(showErrorModal(error.message))
-      
+        .then((responce) => {
+          if (!responce.ok) {
+            throw new Error("Failed to delete task");
+          }
+          return responce.json();
+        })
+        .then((result) => {
+          todoList = todoList.filter((item) => !item.isCompleted);
+          delList = todoList.filter((item) => item.isCompleted);
+          resetTabs();
+          checkAll.checked = false;
+          updateDisplayedTasks();
+          updateCounters();
+        })
+        .catch(showErrorModal(error.message));
     }
   };
 
-  const editTask = async(id, newText) => {
-    const task = todoList.find(task => task.id == id);
+  const editTask = async (id, newText) => {
+    const task = todoList.find((task) => task.id == id);
 
     if (task) {
-        await fetch(`${URL}/${id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: newText }), 
+      await fetch(`${URL}/update/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: newText }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Failed to edit task");
+          }
+          return response.json();
         })
-        .then(response => {
-            if (!response.ok) {
-                
-                    throw new Error("Failed to update task");
-                
-            }
-            return response.json();
+        .then((data) => {
+          isUpdating = false;
+          task.text = newText;
+          updateDisplayedTasks();
+          updateCounters();
         })
-        .then(data => {
-            task.text = newText;
-            updateDisplayedTasks();
-            updateCounters();
-        })
-        .catch(error => {
-            showErrorModal(error.message);
+        .catch((error) => {
+          showErrorModal(error.message);
         });
     } else {
-        console.log('Task not found');
+      showErrorModal("Task not found");
     }
-};
+  };
 
-let isUpdating = false;
+  let isUpdating = false;
   const editDone = (event) => {
     if (isUpdating) return;
     const listItem = event.target.parentNode.parentNode;
     const id = parseInt(listItem.dataset.id);
-    const task = todoList.find((task) => task.id == id);
-    const oldText = task.text;
     if (
       (event.keyCode === ENTER_BUTTON || event.type === "blur") &&
       event.target.matches(".input-edit")
-      
     ) {
-    
+      const task = todoList.find((task) => task.id == id);
+      const oldText = task.text;
       const newText = validationText(event.target.value);
+
       if (newText.length !== 0 && newText !== oldText) {
         isUpdating = true;
+
         editTask(id, newText);
 
         updateDisplayedTasks();
       } else {
-        
         updateDisplayedTasks();
       }
     }
     if (event.keyCode === ESCAPE_BUTTON) {
-      console.log(todoList);
+      console.log(1);
       event.target.value = todoList.find((task) => task.id == id).text;
       event.target.hidden = "false";
       event.target.nextElementSibling.hidden = "";
@@ -410,7 +407,7 @@ let isUpdating = false;
         break;
     }
     console.log(filteredList);
-    
+
     createList(filteredList);
   };
 
@@ -436,40 +433,20 @@ let isUpdating = false;
     }
   };
 
-const modal = document.getElementById('error-modal');
-const closeBtn = document.querySelector('.close');
-const errorMessageElem = document.getElementById('error-message');
-
-
-function showErrorModal(message) {
-  errorMessageElem.textContent = message;
-  modal.style.display = 'block';
-}
-
-
-function closeModal() {
-  modal.style.display = 'none';
-}
-
-
-closeBtn.addEventListener('click', closeModal);
-
-
-window.addEventListener('click', (event) => {
-  if (event.target === modal) {
-    closeModal();
+  function showErrorModal(message) {
+    errorMessageElem.textContent = message;
+    modal.style.display = "block";
   }
-});
 
-function logDateAfterDelay(delay, callback) {
-  setTimeout(() => {
-    const now = new Date();
-    console.log(`Date and time: ${now}`);
-    callback();
-  }, delay);
-}
+  function closeModal() {
+    modal.style.display = "none";
+  }
 
-
+  window.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
 
   taskList.addEventListener("click", changeTask);
   taskList.addEventListener("keyup", editDone);
@@ -480,4 +457,5 @@ function logDateAfterDelay(delay, callback) {
   deleteCompleted.addEventListener("click", delCompleted);
   tabsContainer.addEventListener("click", switchTabs);
   paginationContainer.addEventListener("click", paginationButtonClick);
+  closeBtn.addEventListener("click", closeModal);
 })();
