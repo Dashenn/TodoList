@@ -219,7 +219,7 @@
         if (!response.ok) {
           throw new Error("Failed to delete task");
         }
-        return response.json();
+        return response.text();
       })
       .then(() => {
         todoList = todoList.filter((item) => item.id != id);
@@ -433,20 +433,19 @@
     }
   };
 
-  function showErrorModal(message) {
+  const showErrorModal = (message) => {
     errorMessageElem.textContent = message;
     modal.style.display = "block";
-  }
+  };
 
-  function closeModal() {
+  const closeModal = () => {
     modal.style.display = "none";
-  }
-
-  window.addEventListener("click", (event) => {
+  };
+  const close = (event) => {
     if (event.target === modal) {
       closeModal();
     }
-  });
+  };
 
   taskList.addEventListener("click", changeTask);
   taskList.addEventListener("keyup", editDone);
@@ -458,4 +457,5 @@
   tabsContainer.addEventListener("click", switchTabs);
   paginationContainer.addEventListener("click", paginationButtonClick);
   closeBtn.addEventListener("click", closeModal);
+  window.addEventListener("click", close);
 })();
