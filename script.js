@@ -25,6 +25,7 @@
   let currentPage = 1;
   let totalPages = 1;
 
+  getTasks();
   const validationText = (text) => {
     return text
       .trim()
@@ -35,8 +36,6 @@
 
   const addTask = () => {
     const text = input.value.trim();
-    console.log(text);
-
     if (text === "") {
       return;
     }
@@ -52,7 +51,6 @@
         if (!res.ok) {
           throw new Error("Error creating task");
         }
-        console.log(res);
         return res.json();
       })
       .then((createdTask) => {
@@ -132,7 +130,6 @@
         showErrorModal(error.message);
       });
   };
-  getTasks();
 
   const createList = async (list) => {
     taskList.innerHTML = "";
@@ -156,7 +153,6 @@
             </li>`;
       taskList.innerHTML += task;
     });
-
     updateCounters();
     createPagination(list.length);
   };
@@ -182,7 +178,7 @@
             }
             return response.json();
           })
-          .then((result) => {
+          .then(() => {
             item.isCompleted = checked;
             const filteredList = todoList.filter((task) => {
               if (currentTab === "active") return !task.isCompleted;
@@ -198,7 +194,6 @@
             if (currentPage > totalPages && currentPage > 1) {
               currentPage--;
             }
-
             updateDisplayedTasks();
           })
           .catch((error) => {
@@ -242,11 +237,9 @@
           checkAll.checked = true;
         }
         calculationTotalPage(filteredList.length);
-
         if (currentPage > totalPages && currentPage > 1) {
           currentPage--;
         }
-
         updateDisplayedTasks();
         updateCounters();
       })
@@ -256,11 +249,8 @@
   };
 
   const checkAllTasks = async () => {
-    console.log(todoList);
-
     if (todoList.length !== 0) {
       const isCompleted = checkAll.checked;
-
       await fetch(`${URL}/update-all`, {
         method: "PATCH",
         headers: {
@@ -269,15 +259,12 @@
         body: JSON.stringify({ isCompleted }),
       })
         .then((response) => {
-          console.log(response);
           if (!response.ok) {
             throw new Error("Failed to update all tasks");
           }
-          return response.json();
+          return response.text();
         })
         .then((result) => {
-          console.log(result);
-
           todoList.map((item) => (item.isCompleted = isCompleted));
           updateDisplayedTasks();
           updateCounters();
@@ -302,9 +289,9 @@
           if (!responce.ok) {
             throw new Error("Failed to delete task");
           }
-          return responce.json();
+          return responce.text();
         })
-        .then((result) => {
+        .then(() => {
           todoList = todoList.filter((item) => !item.isCompleted);
           delList = todoList.filter((item) => item.isCompleted);
           resetTabs();
@@ -312,7 +299,9 @@
           updateDisplayedTasks();
           updateCounters();
         })
-        .catch(showErrorModal(error.message));
+        .catch((error) => {
+          showErrorModal(error.message);
+        });
     }
   };
 
@@ -331,7 +320,7 @@
           }
           return response.json();
         })
-        .then((data) => {
+        .then(() => {
           isUpdating = false;
           task.text = newText;
           updateDisplayedTasks();
@@ -357,19 +346,15 @@
       const task = todoList.find((task) => task.id == id);
       const oldText = task.text;
       const newText = validationText(event.target.value);
-
       if (newText.length !== 0 && newText !== oldText) {
         isUpdating = true;
-
         editTask(id, newText);
-
         updateDisplayedTasks();
       } else {
         updateDisplayedTasks();
       }
     }
     if (event.keyCode === ESCAPE_BUTTON) {
-      console.log(1);
       event.target.value = todoList.find((task) => task.id == id).text;
       event.target.hidden = "false";
       event.target.nextElementSibling.hidden = "";
@@ -386,7 +371,6 @@
       removeTask(id);
     }
     if (event.target.matches(".task-text") && event.detail === DETAIL_TWO) {
-      console.log(event.target.nextElementSibling);
       event.target.hidden = "true";
       event.target.nextElementSibling.hidden = "";
       event.target.nextElementSibling.focus();
@@ -406,8 +390,6 @@
         filteredList = todoList.filter((task) => task.isCompleted);
         break;
     }
-    console.log(filteredList);
-
     createList(filteredList);
   };
 
