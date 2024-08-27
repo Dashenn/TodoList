@@ -14,6 +14,7 @@
   const closeBtn = document.querySelector(".close");
   const errorMessageElem = document.getElementById("error-message");
 
+  //const URL = "https://api.t4.academy.dunice-testing.com/todos";
   const URL = "http://localhost:3000/todos";
   const TASKS_PER_PAGE = 5;
   const ENTER_BUTTON = 13;
@@ -25,13 +26,8 @@
   let currentPage = 1;
   let totalPages = 1;
 
-  getTasks();
   const validationText = (text) => {
-    return text
-      .trim()
-      .replace(/ {2,}/g, " ")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+    return _.escape(text.trim().replace(/s+/g, " "));
   };
 
   const addTask = () => {
@@ -40,7 +36,8 @@
       return;
     }
 
-    fetch(`${URL}/create`, {
+    input.value = "";
+    fetch(URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -56,7 +53,7 @@
       .then((createdTask) => {
         currentTab = "all";
         allStyles();
-        input.value = "";
+        createdTask.text = validationText(createdTask.text);
 
         todoList.push(createdTask);
         checkAll.checked = false;
@@ -118,6 +115,9 @@
         return response.json();
       })
       .then((tasks) => {
+        tasks.forEach((item) => {
+          item.text = validationText(item.text);
+        });
         todoList = tasks;
 
         createList(tasks);
@@ -133,7 +133,6 @@
 
   const createList = async (list) => {
     taskList.innerHTML = "";
-
     const start = (currentPage - 1) * TASKS_PER_PAGE;
     const end = start + TASKS_PER_PAGE;
     const paginatedList = list.slice(start, end);
@@ -156,7 +155,6 @@
     updateCounters();
     createPagination(list.length);
   };
-  createList(todoList);
 
   const resetTabs = () => {
     currentTab = "all";
@@ -167,7 +165,7 @@
   const updateTaskStatus = (id, checked) => {
     todoList.forEach((item) => {
       if (item.id == id) {
-        fetch(`${URL}/update/${id}`, {
+        fetch(`${URL}/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ isCompleted: !item.isCompleted }),
@@ -204,7 +202,7 @@
   };
 
   const removeTask = async (id) => {
-    await fetch(`${URL}/delete/${id}`, {
+    await fetch(`${URL}/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -243,15 +241,17 @@
         updateDisplayedTasks();
         updateCounters();
       })
+
       .catch((error) => {
         showErrorModal(error.message);
       });
+    todoList = todoList.filter((item) => item.id != id);
   };
 
-  const checkAllTasks = async () => {
+  const checkAllTasks = async (event) => {
     if (todoList.length !== 0) {
       const isCompleted = checkAll.checked;
-      await fetch(`${URL}/update-all`, {
+      await fetch(URL, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -259,6 +259,7 @@
         body: JSON.stringify({ isCompleted }),
       })
         .then((response) => {
+          event.preventDefault();
           if (!response.ok) {
             throw new Error("Failed to update all tasks");
           }
@@ -279,7 +280,7 @@
 
   const delCompleted = async () => {
     if (todoList.some((item) => item.isCompleted)) {
-      fetch(`${URL}/delete-completed`, {
+      fetch(`${URL}/delCompleted`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -309,7 +310,7 @@
     const task = todoList.find((task) => task.id == id);
 
     if (task) {
-      await fetch(`${URL}/update/${id}`, {
+      await fetch(`${URL}/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: newText }),
@@ -364,6 +365,7 @@
   const changeTask = (event) => {
     if (event.target.matches(".check")) {
       let id = parseInt(event.target.parentNode.parentNode.dataset.id);
+      event.preventDefault();
       updateTaskStatus(id, event.target.checked);
     }
     if (event.target.matches(".task-delete")) {
@@ -439,5 +441,6 @@
   tabsContainer.addEventListener("click", switchTabs);
   paginationContainer.addEventListener("click", paginationButtonClick);
   closeBtn.addEventListener("click", closeModal);
+  window.addEventListener("load", getTasks);
   window.addEventListener("click", close);
 })();
