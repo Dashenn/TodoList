@@ -20,6 +20,7 @@
   const ENTER_BUTTON = 13;
   const DETAIL_TWO = 2;
   const ESCAPE_BUTTON = 27;
+  const contentType = "application/json";
 
   let todoList = [];
   let currentTab = "all";
@@ -40,7 +41,7 @@
     fetch(URL, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": contentType,
       },
       body: JSON.stringify({ text: text }),
     })
@@ -167,7 +168,7 @@
       if (item.id == id) {
         fetch(`${URL}/${id}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": contentType },
           body: JSON.stringify({ isCompleted: !item.isCompleted }),
         })
           .then((response) => {
@@ -195,6 +196,7 @@
             updateDisplayedTasks();
           })
           .catch((error) => {
+            getTasks();
             showErrorModal(error.message);
           });
       }
@@ -205,7 +207,7 @@
     await fetch(`${URL}/${id}`, {
       method: "DELETE",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": contentType,
       },
     })
       .then((response) => {
@@ -240,33 +242,40 @@
         }
         updateDisplayedTasks();
         updateCounters();
+        console.log(id);
       })
 
       .catch((error) => {
+        console.log(id);
+        getTasks();
         showErrorModal(error.message);
       });
-    todoList = todoList.filter((item) => item.id != id);
   };
 
   const checkAllTasks = async (event) => {
+    event.preventDefault();
     if (todoList.length !== 0) {
       const isCompleted = checkAll.checked;
       await fetch(URL, {
         method: "PATCH",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": contentType,
         },
         body: JSON.stringify({ isCompleted }),
       })
         .then((response) => {
-          event.preventDefault();
           if (!response.ok) {
             throw new Error("Failed to update all tasks");
           }
           return response.text();
         })
         .then((result) => {
-          todoList.map((item) => (item.isCompleted = isCompleted));
+          if (isCompleted) {
+            checkAll.checked = true;
+          } else {
+            checkAll.checked = false;
+          }
+          todoList.forEach((item) => (item.isCompleted = isCompleted));
           updateDisplayedTasks();
           updateCounters();
         })
@@ -283,7 +292,7 @@
       fetch(`${URL}/delCompleted`, {
         method: "DELETE",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": contentType,
         },
       })
         .then((responce) => {
@@ -312,7 +321,7 @@
     if (task) {
       await fetch(`${URL}/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": contentType },
         body: JSON.stringify({ text: newText }),
       })
         .then((response) => {
@@ -328,6 +337,7 @@
           updateCounters();
         })
         .catch((error) => {
+          getTasks();
           showErrorModal(error.message);
         });
     } else {
