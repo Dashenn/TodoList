@@ -14,7 +14,6 @@
   const closeBtn = document.querySelector(".close");
   const errorMessageElem = document.getElementById("error-message");
 
-  //const URL = "https://api.t4.academy.dunice-testing.com/todos";
   const URL = "http://localhost:3000/todos";
   const TASKS_PER_PAGE = 5;
   const ENTER_BUTTON = 13;
